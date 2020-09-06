@@ -217,6 +217,7 @@
 				adi,rx-rf-port-input-select = <0x0>;
 				adi,tx-rf-port-input-select = <0x0>;
 				adi,tx-attenuation-mdB = <0x2710>;
+				adi,tx-lo-powerdown-managed-enable;
 				adi,rf-rx-bandwidth-hz = <0x112a880>;
 				adi,rf-tx-bandwidth-hz = <0x112a880>;
 				adi,rx-synthesizer-frequency-hz = <0x0 0x8f0d1800>;
@@ -427,7 +428,7 @@
 			#size-cells = <0x0>;
 		};
 
-		sdhci@e0100000 {
+		mmc@e0100000 {
 			compatible = "arasan,sdhci-8.9a";
 			status = "okay";
 			clock-names = "clk_xin", "clk_ahb";
@@ -435,11 +436,10 @@
 			interrupt-parent = <0x1>;
 			interrupts = <0x0 0x18 0x4>;
 			reg = <0xe0100000 0x1000>;
-			broken-adma2;
 			disable-wp;
 		};
 
-		sdhci@e0101000 {
+		mmc@e0101000 {
 			compatible = "arasan,sdhci-8.9a";
 			status = "disabled";
 			clock-names = "clk_xin", "clk_ahb";
@@ -447,10 +447,10 @@
 			interrupt-parent = <0x1>;
 			interrupts = <0x0 0x2f 0x4>;
 			reg = <0xe0101000 0x1000>;
-			broken-adma2;
 		};
 
 		slcr@f8000000 {
+			u-boot,dm-pre-reloc;
 			#address-cells = <0x1>;
 			#size-cells = <0x1>;
 			compatible = "xlnx,zynq-slcr", "syscon", "simple-mfd";
@@ -460,6 +460,7 @@
 			phandle = <0x8>;
 
 			clkc@100 {
+				u-boot,dm-pre-reloc;
 				#clock-cells = <0x1>;
 				compatible = "xlnx,ps7-clkc";
 				fclk-enable = <0xf>;
@@ -668,8 +669,8 @@
 			compatible = "adi,axi-dmac-1.00.a";
 			reg = <0x7c400000 0x10000>;
 			#dma-cells = <0x1>;
-			interrupts = <0 57 4>;
-			clocks = <0x2 0xf 0xf>;
+			interrupts = <0x0 0x39 0x0>;
+			clocks = <0x2 0x10>;
 			linux,phandle = <0xb>;
 			phandle = <0xb>;
 
@@ -683,7 +684,6 @@
 					adi,source-bus-type = <0x2>;
 					adi,destination-bus-width = <0x40>;
 					adi,destination-bus-type = <0x0>;
-					adi,length-width = <0x18>;
 				};
 			};
 		};
@@ -692,8 +692,8 @@
 			compatible = "adi,axi-dmac-1.00.a";
 			reg = <0x7c420000 0x10000>;
 			#dma-cells = <0x1>;
-			interrupts = <0 56 4>;
-			clocks = <0x2 0xf 0xf>;
+			interrupts = <0x0 0x38 0x0>;
+			clocks = <0x2 0x10>;
 			linux,phandle = <0xd>;
 			phandle = <0xd>;
 
@@ -707,8 +707,6 @@
 					adi,source-bus-type = <0x0>;
 					adi,destination-bus-width = <0x40>;
 					adi,destination-bus-type = <0x2>;
-					adi,length-width = <0x18>;
-					adi,cyclic;
 				};
 			};
 		};
@@ -735,7 +733,7 @@
 		tx_dma: dma@80400000 {
 			#dma-cells = <1>;
 			clock-names = "s_axi_lite_aclk", "m_axi_sg_aclk", "m_axi_mm2s_aclk", "m_axi_s2mm_aclk";
-			clocks = <0x2 0x10>, <0x2 0x10>, <0x2 0x10>, <0x2 0x10>;
+			clocks = <0x2 0x11>, <0x2 0x11>, <0x2 0x11>, <0x2 0x11>;
 			compatible = "xlnx,axi-dma-1.00.a";
 			interrupt-names = "mm2s_introut", "s2mm_introut";
 			interrupt-parent = <1>;
@@ -763,7 +761,7 @@
 		rx_dma: dma@80410000 {
 			#dma-cells = <1>;
 			clock-names = "s_axi_lite_aclk", "m_axi_sg_aclk", "m_axi_mm2s_aclk", "m_axi_s2mm_aclk";
-			clocks = <0x2 0x10>, <0x2 0x10>, <0x2 0x10>, <0x2 0x10>;
+			clocks = <0x2 0x11>, <0x2 0x11>, <0x2 0x11>, <0x2 0x11>;
 			compatible = "xlnx,axi-dma-1.00.a";
 			//dma-coherent ;
 			interrupt-names = "mm2s_introut", "s2mm_introut";
@@ -791,7 +789,7 @@
 
 		tx_intf_0: tx_intf@83c00000 {
 			clock-names = "s00_axi_aclk", "s00_axis_aclk", "s01_axis_aclk", "m00_axis_aclk";
-			clocks = <0x2 0x10>, <0x2 0x10>, <0x2 0x10>, <0x2 0x10>;
+			clocks = <0x2 0x11>, <0x2 0x11>, <0x2 0x11>, <0x2 0x11>;
 			compatible = "sdr,tx_intf";
 			interrupt-names = "tx_itrpt0", "tx_itrpt1";
 			interrupt-parent = <1>;
@@ -803,7 +801,7 @@
 
 		rx_intf_0: rx_intf@83c20000 {
 			clock-names = "s00_axi_aclk", "s00_axis_aclk", "m00_axis_aclk";
-			clocks = <0x2 0x10>, <0x2 0x10>, <0x2 0x10>;
+			clocks = <0x2 0x11>, <0x2 0x11>, <0x2 0x11>;
 			compatible = "sdr,rx_intf";
 			interrupt-names = "not_valid_anymore", "rx_pkt_intr";
 			interrupt-parent = <1>;
@@ -815,21 +813,21 @@
 
 		openofdm_tx_0: openofdm_tx@83c10000 {
 			clock-names = "clk";
-			clocks = <0x2 0x10>;
+			clocks = <0x2 0x11>;
 			compatible = "sdr,openofdm_tx";
 			reg = <0x83c10000 0x10000>;
 		};
 
 		openofdm_rx_0: openofdm_rx@83c30000 {
 			clock-names = "clk";
-			clocks = <0x2 0x10>;
+			clocks = <0x2 0x11>;
 			compatible = "sdr,openofdm_rx";
 			reg = <0x83c30000 0x10000>;
 		};
 
 		xpu_0: xpu@83c40000 {
 			clock-names = "s00_axi_aclk";
-			clocks = <0x2 0x10>;
+			clocks = <0x2 0x11>;
 			compatible = "sdr,xpu";
 			reg = <0x83c40000 0x10000>;
 		};
@@ -855,6 +853,11 @@
 			compatible = "mathworks,mwipcore-axi4lite-v1.00";
 			reg = <0x43c00000 0xffff>;
 		};
+
+		/*axi-sysid-0@45000000 {
+			compatible = "adi,axi-sysid-1.00.a";
+			reg = <0x45000000 0x10000>;
+		};*/
 	};
 
 	leds {
