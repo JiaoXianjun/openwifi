@@ -3,7 +3,9 @@
 
 **openwifi:** Linux mac80211 compatible full-stack IEEE802.11/Wi-Fi design based on SDR (Software Defined Radio).
 
-This repository includes Linux driver and software. [openwifi-hw](https://github.com/open-sdr/openwifi-hw) repository has the FPGA design. [[Project document](https://github.com/open-sdr/openwifi/tree/master/doc)]
+This repository includes Linux driver and software. [openwifi-hw](https://github.com/open-sdr/openwifi-hw) repository has the FPGA design. 
+
+[[Project document](doc)], [[Quick start](#Quick-start)], [[Application notes](doc/app_notes)]
 
 [[Videos](#Videos)] [[Papers](#Papers)] [openwifi [maillist](https://lists.ugent.be/wws/subscribe/openwifi)] [[Cite openwifi project](#Cite-openwifi-project)]
 
@@ -23,6 +25,7 @@ Openwifi code has dual licenses. AGPLv3 is the opensource license. For non-opens
 - Easy to change bandwidth and frequency: 
   - 2MHz for 802.11ah in sub-GHz
   - 10MHz for 802.11p/vehicle in 5.9GHz
+- CSI (Channel State Information, also freq offset, equalizer) [[CSI notes](doc/app_notes/csi.md)]
 - On roadmap: **802.11ax**
 
 **Performance (AP: openwifi at channel 44, client: TL-WDN4200 N900 USB Dongle):**
@@ -33,12 +36,12 @@ Openwifi code has dual licenses. AGPLv3 is the opensource license. For non-opens
 
 board_name|board combination|status|SD card img
 -------|-------|----|----
-zc706_fmcs2|Xilinx ZC706 dev board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-4-32bit.img.xz)
-zed_fmcs2|Xilinx zed board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-4-32bit.img.xz)
-adrv9364z7020|ADRV9364-Z7020 + ADRV1CRR-BOB|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-4-32bit.img.xz)
-adrv9361z7035|ADRV9361-Z7035 + ADRV1CRR-BOB/FMC|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-4-32bit.img.xz)
-zc702_fmcs2|Xilinx ZC702 dev board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-4-32bit.img.xz)
-zcu102_fmcs2|Xilinx ZCU102 dev board + FMCOMMS2/3/4|Done|[64bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-4-64bit.img.xz)
+zc706_fmcs2|Xilinx ZC706 dev board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-5-32bit.img.xz)
+zed_fmcs2|Xilinx zed board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-5-32bit.img.xz)
+adrv9364z7020|ADRV9364-Z7020 + ADRV1CRR-BOB|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-5-32bit.img.xz)
+adrv9361z7035|ADRV9361-Z7035 + ADRV1CRR-BOB/FMC|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-5-32bit.img.xz)
+zc702_fmcs2|Xilinx ZC702 dev board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-5-32bit.img.xz)
+zcu102_fmcs2|Xilinx ZCU102 dev board + FMCOMMS2/3/4|Done|[64bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-5-64bit.img.xz)
 zcu102_9371|Xilinx ZCU102 dev board + ADRV9371|Future|None
 
 - board_name is used to identify FPGA design in openwifi-hw/boards/
@@ -54,6 +57,9 @@ zcu102_9371|Xilinx ZCU102 dev board + ADRV9371|Future|None
 [[Build openwifi Linux img from scratch](#Build-openwifi-Linux-img-from-scratch)]
 [[Special note for 11b](#Special-note-for-11b)]
 [[Porting guide](#Porting-guide)]
+
+[[Project document](doc)]
+[[Application notes](doc/app_notes)]
 
 ## Quick start
 - Burn openwifi board specific img file (from the table) into a SD card ("Open With Disk Image Writer". Or "dd" command after unzip). The SD card has two partitions: BOOT and rootfs. You need to config the **correct files in the BOOT partition** according to the **board you have** by operation on your computer: 
@@ -80,6 +86,7 @@ zcu102_9371|Xilinx ZCU102 dev board + ADRV9371|Future|None
   **ethX** is the PC NIC name connecting the board. **ethY** is the PC NIC name connecting internet.
   
   If you want, uncommenting "net.ipv4.ip_forward=1" in /etc/sysctl.conf to make IP forwarding persistent on PC.
+- To monitor **real-time CSI (Chip State Information)**, such as timestamp, frequency offset, channel state, equalizer, please refer to [[CSI notes](doc/app_notes/csi.md)].
 
 ## Basic operations
 The board actually is an Linux/Ubuntu computer which is running **hostapd** to offer Wi-Fi AP functionality over the Wi-Fi Network Interface (NIC). The NIC is implemented by openwifi-hw FPGA design. We use the term **"On board"** to indicate that the commands should be executed after ssh login to the board. **"On PC"** means the commands should run on PC.
@@ -174,7 +181,7 @@ Since the pre-built SD card image might not have the latest bug-fixes/updates, i
    - Input password "openwifi"
 
 ## Build openwifi Linux img from scratch
-- Download [2019_R1-2020_02_04.img.xz](http://swdownloads.analog.com/cse/2019_R1-2020_02_04.img.xz) from [Analog Devices Wiki](https://wiki.analog.com/resources/tools-software/linux-software/zynq_images). Burn it to a SD card.
+- Download [2019_R1-2020_02_04.img.xz](https://swdownloads.analog.com/cse/2019_R1-2020_02_04.img.xz) from [Analog Devices Wiki](https://wiki.analog.com/resources/tools-software/linux-software/zynq_images). Burn it to a SD card.
 - Insert the SD card to your Linux PC. Find out the mount point (that has two sub directories BOOT and rootfs), and setup environment variables (use absolute path):
   ```
   export SDCARD_DIR=sdcard_mount_point
@@ -221,7 +228,7 @@ $OPENWIFI_DIR/user_space/build_wpa_supplicant_wo11b.sh $OPENWIFI_DIR
 ```
 ## Porting guide
 
-This section explains the porting work by showing the differences between openwifi and Analog Devices reference design. openwifi is based on f61d9707 (2019 r1) of [HDL Reference Designs](https://github.com/analogdevicesinc/hdl).
+This section explains the porting work by showing the differences between openwifi and Analog Devices reference design. openwifi is based on 4fea7c5 (2019 r1) of [HDL Reference Designs](https://github.com/analogdevicesinc/hdl).
 - Open the fmcomms2 + zc706 reference design at hdl/projects/fmcomms2/zc706 (Please read Analog Devices help)
 - Open the openwifi design zc706_fmcs2 at openwifi-hw/boards/zc706_fmcs2 (Please read openwifi-hw repository)
 - "Open Block Design", you will see the differences between openwifi and the reference design. Both in "diagram" and in "Address Editor".
@@ -237,9 +244,12 @@ FOSDEM2020 [[youtube](https://youtu.be/Mq48cGthk7M)], [[link for CHN user](https
 
 Low latency for gaming and introduction [[youtube](https://youtu.be/Notn9X482LI)], [[link for CHN user](https://www.zhihu.com/zvideo/1273823153371385856)]
 
+CSI (Channel State Information) [[twitter](https://twitter.com/i/status/1314207380561780738)], [[link for CHN user](https://www.zhihu.com/zvideo/1297662571618148352)]
+
 ## Papers
 
-[openwifi: a free and open-source IEEE802.11 SDR implementation on SoC](https://biblio.ugent.be/publication/8663043/file/8663044.pdf)
+- [openwifi: a free and open-source IEEE802.11 SDR implementation on SoC](https://www.orca-project.eu/wp-content/uploads/sites/4/2020/03/openwifi-vtc-antwerp-PID1249076.pdf)
+- [csi murder](https://ans.unibs.it/projects/csi-murder/)
 
 Openwifi was born in [ORCA project](https://www.orca-project.eu/) (EU's Horizon2020 programme under agreement number 732174).
 
