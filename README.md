@@ -13,20 +13,20 @@ Openwifi code has dual licenses. AGPLv3 is the opensource license. For non-opens
 
 **Features:**
 
-- 802.11a/g
-- 802.11n MCS 0~7 (Only PHY rx for now. Full system support of 802.11n will come soon)
+- 802.11a/g/n [[IEEE 802.11n (Wi-Fi 4)](doc/app_notes/ieee80211n.md)]
 - 20MHz bandwidth; 70 MHz to 6 GHz frequency range
 - Mode tested: Ad-hoc; Station; AP, Monitor
 - DCF (CSMA/CA) low MAC layer in FPGA (10us SIFS is achieved)
+- [802.11 packet injection](doc/app_notes/inject_80211.md)
+- CSI (Channel State Information, freq offset, equalizer to computer) [[CSI notes](doc/app_notes/csi.md)]
+- IQ capture (real-time AGC, RSSI, IQ sample to computer) [[IQ notes](doc/app_notes/iq.md)][[IQ notes for dual antenna](doc/app_notes/iq_2ant.md)]
 - Configurable channel access priority parameters:
   - duration of RTS/CTS, CTS-to-self
   - SIFS/DIFS/xIFS/slot-time/CW/etc
-- Time slicing based on MAC address
+- Time slicing based on MAC address (time gated/scheduled FPGA queues)
 - Easy to change bandwidth and frequency: 
   - 2MHz for 802.11ah in sub-GHz
   - 10MHz for 802.11p/vehicle in 5.9GHz
-- CSI (Channel State Information, freq offset, equalizer to computer) [[CSI notes](doc/app_notes/csi.md)]
-- IQ capture (real-time AGC, RSSI, IQ sample to computer) [[IQ notes](doc/app_notes/iq.md)]
 - On roadmap: **802.11ax**
 
 **Performance (AP: openwifi at channel 44, client: TL-WDN4200 N900 USB Dongle):**
@@ -37,12 +37,12 @@ Openwifi code has dual licenses. AGPLv3 is the opensource license. For non-opens
 
 board_name|board combination|status|SD card img
 -------|-------|----|----
-zc706_fmcs2|Xilinx ZC706 dev board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-6-32bit.img.xz)
-zed_fmcs2|Xilinx zed board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-6-32bit.img.xz)
-adrv9364z7020|ADRV9364-Z7020 + ADRV1CRR-BOB|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-6-32bit.img.xz)
-adrv9361z7035|ADRV9361-Z7035 + ADRV1CRR-BOB/FMC|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-6-32bit.img.xz)
-zc702_fmcs2|Xilinx ZC702 dev board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-6-32bit.img.xz)
-zcu102_fmcs2|Xilinx ZCU102 dev board + FMCOMMS2/3/4|Done|[64bit img](https://users.ugent.be/~xjiao/openwifi-1.1.0-taiyuan-6-64bit.img.xz)
+zc706_fmcs2|Xilinx ZC706 dev board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-32bit.img.xz)
+zed_fmcs2|Xilinx zed board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-32bit.img.xz)
+adrv9364z7020|ADRV9364-Z7020 + ADRV1CRR-BOB|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-32bit.img.xz)
+adrv9361z7035|ADRV9361-Z7035 + ADRV1CRR-BOB/FMC|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-32bit.img.xz)
+zc702_fmcs2|Xilinx ZC702 dev board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-32bit.img.xz)
+zcu102_fmcs2|Xilinx ZCU102 dev board + FMCOMMS2/3/4|Done|[64bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-64bit.img.xz)
 zcu102_9371|Xilinx ZCU102 dev board + ADRV9371|Future|Future
 
 - board_name is used to identify FPGA design in openwifi-hw/boards/
@@ -229,7 +229,7 @@ $OPENWIFI_DIR/user_space/build_wpa_supplicant_wo11b.sh $OPENWIFI_DIR
 ```
 ## Porting guide
 
-This section explains the porting work by showing the differences between openwifi and Analog Devices reference design. openwifi is based on 4fea7c5 (2019 r1) of [HDL Reference Designs](https://github.com/analogdevicesinc/hdl).
+This section explains the porting work by showing the differences between openwifi and Analog Devices reference design. openwifi is based on 2019_R1 of [HDL Reference Designs](https://github.com/analogdevicesinc/hdl).
 - Open the fmcomms2 + zc706 reference design at hdl/projects/fmcomms2/zc706 (Please read Analog Devices help)
 - Open the openwifi design zc706_fmcs2 at openwifi-hw/boards/zc706_fmcs2 (Please read openwifi-hw repository)
 - "Open Block Design", you will see the differences between openwifi and the reference design. Both in "diagram" and in "Address Editor".
