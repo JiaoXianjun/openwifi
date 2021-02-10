@@ -1,3 +1,10 @@
+<!--
+Author: Xianjun jiao, Michael Mehari, Wei Liu
+SPDX-FileCopyrightText: 2019 UGent
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
+
 # Openwifi document
 <img src="./openwifi-detail.jpg" width="1100">
 
@@ -53,7 +60,7 @@ sdrctl dev sdr0 set para_name value
 ```
 para_name|meaning|comment
 ---------|-------|----
-slice_idx|the slice that will be set/get|0~3. After finishing all slice config, **set slice_idx to 4** to synchronize all slices. Otherwize the start/end of different slices have different actual time
+slice_idx|the slice that will be set/get|0~3. After finishing all slice config, **set slice_idx to 4** to synchronize all slices. Otherwise the start/end of different slices have different actual time
 addr|target MAC address of tx slice_idx|32bit. for address 6c:fd:b9:4c:b1:c1, you set b94cb1c1
 slice_total|tx slice_idx cycle length in us|for length 50ms, you set 49999
 slice_start|tx slice_idx cycle start time in us|for start at 10ms, you set 10000
@@ -268,6 +275,16 @@ and use dmesg command in Linux to see those messages. openwifi driver prints nor
   - q2: the packet goes to FPGA queue 2. (You can change the mapping between Linux priority and FPGA queue in sdr.c)
   - wr4 rd3: the write/read index of buffer (shared buffer between the active openwifi_tx and background openwifi_tx_interrupt).
   
+- tx interrupt printing example
+```
+sdr,sdr openwifi_tx_interrupt: tx_result 02 prio2 wr28 rd25 num_rand_slot 21 cw 6 
+```
+  - printing from sdr driver, openwifi_tx_interrupt function.
+  - tx_result: 5 bit, lower 4 bit tells how many tx attempts are made on this packet, and the 5th bit indicates no ack (1) or an ack (0) is received
+  - prio, wr, rd: these fields can be interpreted the same way as the print in openwifi_tx function
+  - num_rand_slot: tells how many slots the CSMA/CA state machine waited until the packet is sent in the last tx attempt.
+  - cw: tells the exponent of the contention window. For this packet, the exponent 6 means the contention window size is 64. If the contention phase is never entered, the cw is set to 0. 
+  
 - rx printing example
 
       sdr,sdr openwifi_rx_interrupt:  28bytes 24M FC0108 DI002c addr1/2/3:66554433222a/b0481ada2ef2/66554433222a SC4760 fcs1 buf_idx13 -30dBm
@@ -288,4 +305,4 @@ For protocol, many native Linux tools you still could rely on. Such as tcpdump.
 
 ### FPGA
 
-For FPGA itself, FPGA developer could use Xilinx ILA tools to analyze FPGA signals. Spying on those state machines in xpu/tx_intf/rx_intf would be very helpful for understanding/debugging Wi-Fi low level funtionalities.
+For FPGA itself, FPGA developer could use Xilinx ILA tools to analyze FPGA signals. Spying on those state machines in xpu/tx_intf/rx_intf would be very helpful for understanding/debugging Wi-Fi low level functionalities.

@@ -1,10 +1,12 @@
-// Xianjun jiao. putaoshu@msn.com; xianjun.jiao@imec.be
+// Author: Xianjun Jiao, Michael Mehari, Wei Liu
+// SPDX-FileCopyrightText: 2019 UGent
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 #ifndef OPENWIFI_SDR
 #define OPENWIFI_SDR
 
 // -------------------for leds--------------------------------
-struct gpio_led_data { //pleas always align with the leds-gpio.c in linux kernel
+struct gpio_led_data { //please always align with the leds-gpio.c in linux kernel
 	struct led_classdev cdev;
 	struct gpio_desc *gpiod;
 	u8 can_sleep;
@@ -12,7 +14,7 @@ struct gpio_led_data { //pleas always align with the leds-gpio.c in linux kernel
 	gpio_blink_set_t platform_gpio_blink_set;
 };
 
-struct gpio_leds_priv { //pleas always align with the leds-gpio.c in linux kernel
+struct gpio_leds_priv { //please always align with the leds-gpio.c in linux kernel
 	int num_leds;
 	struct gpio_led_data leds[];
 };
@@ -304,6 +306,7 @@ struct openwifi_priv {
 	struct ieee80211_vif *vif[MAX_NUM_VIF];
 
 	const struct openwifi_rf_ops *rf;
+	enum openwifi_fpga_type fpga_type;
 
 	struct cf_axi_dds_state *dds_st;  //axi_ad9361 hdl ref design module, dac channel
 	struct axiadc_state *adc_st;      //axi_ad9361 hdl ref design module, adc channel
