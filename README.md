@@ -11,7 +11,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 This repository includes Linux driver and software. [openwifi-hw](https://github.com/open-sdr/openwifi-hw) repository has the FPGA design. 
 
-[[Project document](doc)], [[Quick start](#Quick-start)], [[Application notes](doc/app_notes)]
+[[Project document](doc/README.md)], [[Quick start](#Quick-start)], [[Application notes](doc/app_notes/README.md)]
 
 [[Videos](#Videos)] [[Papers](#Papers)] [openwifi [maillist](https://lists.ugent.be/wws/subscribe/openwifi)] [[Cite openwifi project](#Cite-openwifi-project)]
 
@@ -65,8 +65,8 @@ zcu102_9371|Xilinx ZCU102 dev board + ADRV9371|Future|Future
 [[Special note for 11b](#Special-note-for-11b)]
 [[Porting guide](#Porting-guide)]
 
-[[Project document](doc)]
-[[Application notes](doc/app_notes)]
+[[Project document](doc/README.md)]
+[[Application notes](doc/app_notes/README.md)]
 
 ## Quick start
 - Burn openwifi board specific img file (from the table) into a SD card ("Open With Disk Image Writer". Or "dd" command after unzip). The SD card has two partitions: BOOT and rootfs. You need to config the **correct files in the BOOT partition** according to the **board you have** by operation on your computer: 
@@ -245,18 +245,17 @@ This section explains the porting work by showing the differences between openwi
 
 ## Videos
 
-Demo [[youtube](https://youtu.be/NpjEaszd5u4)], [[link for CHN user](https://www.zhihu.com/zvideo/1280659393378041856)]
-
-FOSDEM2020 [[youtube](https://youtu.be/Mq48cGthk7M)], [[link for CHN user](https://www.zhihu.com/zvideo/1280673506397425664)]
-
-Low latency for gaming and introduction [[youtube](https://youtu.be/Notn9X482LI)], [[link for CHN user](https://www.zhihu.com/zvideo/1273823153371385856)]
-
-CSI (Channel State Information) [[twitter](https://twitter.com/i/status/1314207380561780738)], [[link for CHN user](https://www.zhihu.com/zvideo/1297662571618148352)]
+- Demo [[youtube](https://youtu.be/NpjEaszd5u4)], [[link for CHN user](https://www.zhihu.com/zvideo/1280659393378041856)]
+- FOSDEM2020 [[youtube](https://youtu.be/Mq48cGthk7M)], [[link for CHN user](https://www.zhihu.com/zvideo/1280673506397425664)]
+- Low latency for gaming and introduction [[youtube](https://youtu.be/Notn9X482LI)], [[link for CHN user](https://www.zhihu.com/zvideo/1273823153371385856)]
+- CSI (Channel State Information) [[twitter](https://twitter.com/i/status/1314207380561780738)], [[link for CHN user](https://www.zhihu.com/zvideo/1297662571618148352)]
+- FOSDEM2021 [[Flash back](https://twitter.com/jxjputaoshu/status/1358462741703491584?s=20)], [[link for CHN user](https://www.zhihu.com/zvideo/1340748826311974912)]; [[Presentation](https://mirror.as35701.net/video.fosdem.org/2021/D.radio/fsr_openwifi_opensource_wifi_chip.webm)], [[link for CHN user](https://www.zhihu.com/zvideo/1345036055104360448)]
 
 ## Papers
 
 - [openwifi: a free and open-source IEEE802.11 SDR implementation on SoC](https://www.orca-project.eu/wp-content/uploads/sites/4/2020/03/openwifi-vtc-antwerp-PID1249076.pdf)
 - [csi murder](https://ans.unibs.it/projects/csi-murder/)
+- [IEEE 802.11 CSI randomization to preserve location privacy: An empirical evaluation in different scenarios](https://www.sciencedirect.com/science/article/abs/pii/S138912862100102X)
 
 Openwifi was born in [ORCA project](https://www.orca-project.eu/) (EU's Horizon2020 programme under agreement number 732174).
 
