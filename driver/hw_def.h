@@ -189,6 +189,7 @@ const char *openofdm_rx_compatible_str = "sdr,openofdm_rx";
 #define OPENOFDM_RX_REG_ENABLE_ADDR        (1*4)
 #define OPENOFDM_RX_REG_POWER_THRES_ADDR   (2*4)
 #define OPENOFDM_RX_REG_MIN_PLATEAU_ADDR   (3*4)
+#define OPENOFDM_RX_REG_SOFT_DECODING_ADDR (4*4)
 #define OPENOFDM_RX_REG_STATE_HISTORY_ADDR (20*4)
 
 enum openofdm_rx_mode {
@@ -211,6 +212,7 @@ struct openofdm_rx_driver_api {
 	void (*OPENOFDM_RX_REG_ENABLE_write)(u32 value);
 	void (*OPENOFDM_RX_REG_POWER_THRES_write)(u32 value);
 	void (*OPENOFDM_RX_REG_MIN_PLATEAU_write)(u32 value);
+	void (*OPENOFDM_RX_REG_SOFT_DECODING_write)(u32 value);
 };
 
 // ---------------------------------------openofdm tx-------------------------------
@@ -247,21 +249,22 @@ struct openofdm_tx_driver_api {
 
 const char *xpu_compatible_str = "sdr,xpu";
 
-#define XPU_REG_MULTI_RST_ADDR            (0*4)
-#define XPU_REG_SRC_SEL_ADDR              (1*4)
-#define XPU_REG_TSF_LOAD_VAL_LOW_ADDR     (2*4)
-#define XPU_REG_TSF_LOAD_VAL_HIGH_ADDR    (3*4)
-#define XPU_REG_BAND_CHANNEL_ADDR         (4*4)
-#define XPU_REG_DIFS_ADVANCE_ADDR         (5*4)
-#define XPU_REG_RSSI_DB_CFG_ADDR          (7*4)
-#define XPU_REG_LBT_TH_ADDR               (8*4)
-#define XPU_REG_CSMA_DEBUG_ADDR           (9*4)
-#define XPU_REG_BB_RF_DELAY_ADDR          (10*4)
-#define XPU_REG_MAX_NUM_RETRANS_ADDR      (11*4)
-#define XPU_REG_RECV_ACK_COUNT_TOP0_ADDR  (16*4)
-#define XPU_REG_RECV_ACK_COUNT_TOP1_ADDR  (17*4)
-#define XPU_REG_SEND_ACK_WAIT_TOP_ADDR    (18*4)
-#define XPU_REG_CSMA_CFG_ADDR             (19*4)
+#define XPU_REG_MULTI_RST_ADDR            		(0*4)
+#define XPU_REG_SRC_SEL_ADDR              		(1*4)
+#define XPU_REG_TSF_LOAD_VAL_LOW_ADDR     		(2*4)
+#define XPU_REG_TSF_LOAD_VAL_HIGH_ADDR    		(3*4)
+#define XPU_REG_BAND_CHANNEL_ADDR         		(4*4)
+#define XPU_REG_DIFS_ADVANCE_ADDR         		(5*4)
+#define XPU_REG_FORCE_IDLE_MISC_ADDR      		(6*4)
+#define XPU_REG_RSSI_DB_CFG_ADDR          		(7*4)
+#define XPU_REG_LBT_TH_ADDR               		(8*4)
+#define XPU_REG_CSMA_DEBUG_ADDR           		(9*4)
+#define XPU_REG_BB_RF_DELAY_ADDR         		(10*4)
+#define XPU_REG_ACK_CTL_MAX_NUM_RETRANS_ADDR	(11*4)
+#define XPU_REG_RECV_ACK_COUNT_TOP0_ADDR  		(16*4)
+#define XPU_REG_RECV_ACK_COUNT_TOP1_ADDR  		(17*4)
+#define XPU_REG_SEND_ACK_WAIT_TOP_ADDR    		(18*4)
+#define XPU_REG_CSMA_CFG_ADDR             		(19*4)
 
 #define XPU_REG_SLICE_COUNT_TOTAL_ADDR   (20*4)
 #define XPU_REG_SLICE_COUNT_START_ADDR   (21*4)
@@ -348,6 +351,9 @@ struct xpu_driver_api {
 	void (*XPU_REG_DIFS_ADVANCE_write)(u32 value);
 	u32  (*XPU_REG_DIFS_ADVANCE_read)(void);
 
+	void (*XPU_REG_FORCE_IDLE_MISC_write)(u32 value);
+	u32  (*XPU_REG_FORCE_IDLE_MISC_read)(void);
+
 	u32  (*XPU_REG_TRX_STATUS_read)(void);
 	u32  (*XPU_REG_TX_RESULT_read)(void);
 
@@ -391,7 +397,9 @@ struct xpu_driver_api {
 	u32 (*XPU_REG_SLICE_COUNT_END1_read)(void);
 
 	void (*XPU_REG_BB_RF_DELAY_write)(u32 value);
-	void (*XPU_REG_MAX_NUM_RETRANS_write)(u32 value);
+	
+	void (*XPU_REG_ACK_CTL_MAX_NUM_RETRANS_write)(u32 value);
+	u32  (*XPU_REG_ACK_CTL_MAX_NUM_RETRANS_read)(void);
 
 	void (*XPU_REG_MAC_ADDR_write)(u8 *mac_addr);
 };

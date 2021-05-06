@@ -74,13 +74,8 @@ LINUX_KERNEL_SRC_DIR_NAME32=adi-linux
 LINUX_KERNEL_SRC_DIR_NAME64=adi-linux-64
 
 cd $OPENWIFI_DIR/user_space/
-# special case, we need our xilinx_dma.c is there when building kernel to avoid version issue
-cp $OPENWIFI_DIR/$LINUX_KERNEL_SRC_DIR_NAME32/drivers/dma/xilinx/xilinx_dma.c $OPENWIFI_DIR/$LINUX_KERNEL_SRC_DIR_NAME32/drivers/dma/xilinx/xilinx_dma.c.bak
-cp $OPENWIFI_DIR/driver/xilinx_dma/xilinx_dma.c $OPENWIFI_DIR/$LINUX_KERNEL_SRC_DIR_NAME32/drivers/dma/xilinx -rf
 ./prepare_kernel.sh $OPENWIFI_DIR $XILINX_DIR 32 build
 sudo true
-cp $OPENWIFI_DIR/$LINUX_KERNEL_SRC_DIR_NAME64/drivers/dma/xilinx/xilinx_dma.c $OPENWIFI_DIR/$LINUX_KERNEL_SRC_DIR_NAME64/drivers/dma/xilinx/xilinx_dma.c.bak
-cp $OPENWIFI_DIR/driver/xilinx_dma/xilinx_dma.c $OPENWIFI_DIR/$LINUX_KERNEL_SRC_DIR_NAME64/drivers/dma/xilinx -rf
 ./prepare_kernel.sh $OPENWIFI_DIR $XILINX_DIR 64 build
 sudo true
 
@@ -115,16 +110,21 @@ sudo cp $OPENWIFI_DIR/$LINUX_KERNEL_SRC_DIR_NAME32/arch/arm/boot/uImage  $SDCARD
 sudo mkdir $SDCARD_DIR/BOOT/openwifi/zynqmp-common
 sudo cp $OPENWIFI_DIR/$LINUX_KERNEL_SRC_DIR_NAME64/arch/arm64/boot/Image $SDCARD_DIR/BOOT/openwifi/zynqmp-common/
 
-# Copy uImage BOOT.BIN and devicetree to SD card BOOT partition
+sudo mkdir $SDCARD_DIR/rootfs/root/openwifi
+
+# Copy uImage BOOT.BIN and devicetree to SD card BOOT partition and backup at rootfs/root/openwifi
 sudo cp $OPENWIFI_DIR/kernel_boot/boards/$BOARD_NAME/$dtb_filename $SDCARD_DIR/BOOT/
+sudo cp $OPENWIFI_DIR/kernel_boot/boards/$BOARD_NAME/$dtb_filename $SDCARD_DIR/rootfs/root/openwifi/ -rf
 sudo cp $OPENWIFI_DIR/kernel_boot/boards/$BOARD_NAME/output_boot_bin/BOOT.BIN $SDCARD_DIR/BOOT/
+sudo cp $OPENWIFI_DIR/kernel_boot/boards/$BOARD_NAME/output_boot_bin/BOOT.BIN $SDCARD_DIR/rootfs/root/openwifi/ -rf
 if [ "$BOARD_NAME" == "zcu102_fmcs2" ] || [ "$BOARD_NAME" == "zcu102_9371" ]; then
     sudo cp $OPENWIFI_DIR/$LINUX_KERNEL_SRC_DIR_NAME64/arch/arm64/boot/Image $SDCARD_DIR/BOOT/
+    sudo cp $OPENWIFI_DIR/$LINUX_KERNEL_SRC_DIR_NAME64/arch/arm64/boot/Image $SDCARD_DIR/rootfs/root/openwifi/ -rf
 else
     sudo cp $OPENWIFI_DIR/$LINUX_KERNEL_SRC_DIR_NAME32/arch/arm/boot/uImage $SDCARD_DIR/BOOT/
+    sudo cp $OPENWIFI_DIR/$LINUX_KERNEL_SRC_DIR_NAME32/arch/arm/boot/uImage $SDCARD_DIR/rootfs/root/openwifi/ -rf
 fi
 
-sudo mkdir $SDCARD_DIR/rootfs/root/openwifi
 sudo cp $OPENWIFI_DIR/user_space/* $SDCARD_DIR/rootfs/root/openwifi/ -rf
 sudo wget -P $SDCARD_DIR/rootfs/root/openwifi/webserver/ https://users.ugent.be/~xjiao/openwifi-low-aac.mp4
 
@@ -146,11 +146,11 @@ sudo mkdir $SDCARD_DIR/rootfs/lib/modules
 
 sudo mkdir $SDCARD_DIR/rootfs/lib/modules/$LINUX_KERNEL_SRC_DIR_NAME32
 sudo find $OPENWIFI_DIR/$LINUX_KERNEL_SRC_DIR_NAME32 -name \*.ko -exec cp {} $SDCARD_DIR/rootfs/lib/modules/$LINUX_KERNEL_SRC_DIR_NAME32/ \;
-sudo rm $SDCARD_DIR/rootfs/lib/modules/$LINUX_KERNEL_SRC_DIR_NAME32/{axidmatest.ko,xilinx_dma.ko,adi_axi_hdmi.ko,ad9361_drv.ko} -f
+sudo rm $SDCARD_DIR/rootfs/lib/modules/$LINUX_KERNEL_SRC_DIR_NAME32/{axidmatest.ko,adi_axi_hdmi.ko} -f
 
 sudo mkdir $SDCARD_DIR/rootfs/lib/modules/$LINUX_KERNEL_SRC_DIR_NAME64
 sudo find $OPENWIFI_DIR/$LINUX_KERNEL_SRC_DIR_NAME64 -name \*.ko -exec cp {} $SDCARD_DIR/rootfs/lib/modules/$LINUX_KERNEL_SRC_DIR_NAME64/ \;
-sudo rm $SDCARD_DIR/rootfs/lib/modules/$LINUX_KERNEL_SRC_DIR_NAME64/{axidmatest.ko,xilinx_dma.ko,adi_axi_hdmi.ko,ad9361_drv.ko} -f
+sudo rm $SDCARD_DIR/rootfs/lib/modules/$LINUX_KERNEL_SRC_DIR_NAME64/{axidmatest.ko,adi_axi_hdmi.ko} -f
 
 sudo rm $SDCARD_DIR/rootfs/etc/udev/rules.d/70-persistent-net.rules
 sudo cp $OPENWIFI_DIR/kernel_boot/70-persistent-net.rules $SDCARD_DIR/rootfs/etc/udev/rules.d/
