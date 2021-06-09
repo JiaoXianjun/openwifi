@@ -14,10 +14,9 @@ This repository includes Linux driver and software. [openwifi-hw](https://github
 [[Quick start](#Quick-start)]
 [[Project document](doc/README.md)]
 [[Application notes](doc/app_notes/README.md)]
-[[Videos](#Videos)]
-[[Papers](#Papers)]
+[[Videos](doc/videos.md)]
+[[Publications and How to Cite](doc/publications.md)]
 [[maillist](https://lists.ugent.be/wws/subscribe/openwifi)]
-[[Cite openwifi project](#Cite-openwifi-project)]
 
 Openwifi code has dual licenses. AGPLv3 is the opensource license. For non-opensource and advanced feature license, please contact Filip.Louagie@UGent.be. Openwifi project also leverages some 3rd party modules. It is user's duty to check and follow licenses of those modules according to the purpose/usage. You can find [an example explanation from Analog Devices](https://github.com/analogdevicesinc/hdl/blob/master/LICENSE) for this compound license conditions. [[How to contribute]](https://github.com/open-sdr/openwifi/blob/master/CONTRIBUTING.md). 
 
@@ -28,8 +27,9 @@ Openwifi code has dual licenses. AGPLv3 is the opensource license. For non-opens
 - Mode tested: Ad-hoc; Station; AP, Monitor
 - DCF (CSMA/CA) low MAC layer in FPGA (10us SIFS is achieved)
 - [802.11 packet injection and fuzzing](doc/app_notes/inject_80211.md)
-- CSI (Channel State Information, freq offset, equalizer to computer) [[CSI notes](doc/app_notes/csi.md)]
-- IQ capture (real-time AGC, RSSI, IQ sample to computer) [[IQ notes](doc/app_notes/iq.md)][[IQ notes for dual antenna](doc/app_notes/iq_2ant.md)]
+- [CSI](doc/app_notes/csi.md): Channel State Information, freq offset, equalizer to computer
+- [CSI fuzzer](doc/app_notes/csi_fuzzer.md): Create artificial channel response in WiFi transmitter
+- [[IQ capture](doc/app_notes/iq.md)]: real-time AGC, RSSI, IQ sample to computer. [[Dual antenna version](doc/app_notes/iq_2ant.md)]
 - Configurable channel access priority parameters:
   - duration of RTS/CTS, CTS-to-self
   - SIFS/DIFS/xIFS/slot-time/CW/etc
@@ -47,12 +47,12 @@ Openwifi code has dual licenses. AGPLv3 is the opensource license. For non-opens
 
 board_name|board combination|status|SD card img|Vivado license
 -------|-------|----|----|-----
-zc706_fmcs2|Xilinx ZC706 dev board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-1-32bit.img.xz)|Need
-zed_fmcs2|Xilinx zed board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-1-32bit.img.xz)|**NO** need
-adrv9364z7020|ADRV9364-Z7020 + ADRV1CRR-BOB|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-1-32bit.img.xz)|**NO** need
-adrv9361z7035|ADRV9361-Z7035 + ADRV1CRR-BOB/FMC|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-1-32bit.img.xz)|Need
-zc702_fmcs2|Xilinx ZC702 dev board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-1-32bit.img.xz)|**NO** need
-zcu102_fmcs2|Xilinx ZCU102 dev board + FMCOMMS2/3/4|Done|[64bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-1-64bit.img.xz)|Need
+zc706_fmcs2|Xilinx ZC706 dev board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-2-32bit.img.xz)|Need
+zed_fmcs2|Xilinx zed board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-2-32bit.img.xz)|**NO** need
+adrv9364z7020|ADRV9364-Z7020 + ADRV1CRR-BOB|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-2-32bit.img.xz)|**NO** need
+adrv9361z7035|ADRV9361-Z7035 + ADRV1CRR-BOB/FMC|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-2-32bit.img.xz)|Need
+zc702_fmcs2|Xilinx ZC702 dev board + FMCOMMS2/3/4|Done|[32bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-2-32bit.img.xz)|**NO** need
+zcu102_fmcs2|Xilinx ZCU102 dev board + FMCOMMS2/3/4|Done|[64bit img](https://users.ugent.be/~xjiao/openwifi-1.2.0-leuven-2-64bit.img.xz)|Need
 zcu102_9371|Xilinx ZCU102 dev board + ADRV9371|Future|Future|Need
 
 - board_name is used to identify FPGA design in openwifi-hw/boards/
@@ -155,6 +155,7 @@ Since the pre-built SD card image might not have the latest bug-fixes/updates, i
   $OPENWIFI_DIR/user_space/prepare_kernel.sh $OPENWIFI_DIR $XILINX_DIR ARCH_BIT
   (For Zynq 7000, ARCH_BIT should be 32, for Zynq MPSoC, ARCH_BIT should be 64)
   ```
+  **Note**: In Ubuntu, gcc-10 might have issue ('yylloc' error), so use gcc-9 if you encounter error.
 - Compile the latest openwifi driver
   ```
   $OPENWIFI_DIR/driver/make_all.sh $OPENWIFI_DIR $XILINX_DIR ARCH_BIT
@@ -165,6 +166,7 @@ Since the pre-built SD card image might not have the latest bug-fixes/updates, i
   scp `find $OPENWIFI_DIR/driver/ -name \*.ko` root@192.168.10.122:openwifi/
   ```
   Now you can use **wgd.sh** on board to load the new openwifi driver.
+  **Note**: If you have symbol or version error while loadng the driver, it could be because the kernel in the SD card image is too old. In this case, you need to follow [[Build openwifi Linux img from scratch](#Build-openwifi-Linux-img-from-scratch)] to generate your new SD card image.
 
 ## Update sdrctl
 - Copy the sdrctl source files to the board via ssh channel
@@ -245,34 +247,6 @@ This section explains the porting work by showing the differences between openwi
 - The address/interrupts of FPGA blocks hooked to the ARM bus should be put/aligned to the devicetree file openwifi/kernel_boot/boards/zc706_fmcs2/devicetree.dts. Linux will parse the devicetree.dtb when booting to know information of attached device (FPGA blocks in our case).
 - We use dtc command to get devicetree.dts converted from devicetree.dtb in [Analog Devices Linux image](https://wiki.analog.com/resources/tools-software/linux-software/zynq_images), then do modification according to what we have added/modified to the reference design.
 - Please learn the script in [[Build openwifi Linux img from scratch](#Build-openwifi-Linux-img-from-scratch)] to understand how we generate devicetree.dtb, BOOT.BIN and Linux kernel uImage and put them together to build the full SD card image.
-
-## Videos
-
-- Demo [[youtube](https://youtu.be/NpjEaszd5u4)], [[link for CHN user](https://www.zhihu.com/zvideo/1280659393378041856)]
-- FOSDEM2020 [[youtube](https://youtu.be/Mq48cGthk7M)], [[link for CHN user](https://www.zhihu.com/zvideo/1280673506397425664)]
-- Low latency for gaming and introduction [[youtube](https://youtu.be/Notn9X482LI)], [[link for CHN user](https://www.zhihu.com/zvideo/1273823153371385856)]
-- CSI (Channel State Information) [[twitter](https://twitter.com/i/status/1314207380561780738)], [[link for CHN user](https://www.zhihu.com/zvideo/1297662571618148352)]
-- FOSDEM2021 [[Flash back](https://twitter.com/jxjputaoshu/status/1358462741703491584?s=20)], [[link for CHN user](https://www.zhihu.com/zvideo/1340748826311974912)]; [[Presentation](https://mirror.as35701.net/video.fosdem.org/2021/D.radio/fsr_openwifi_opensource_wifi_chip.webm)], [[link for CHN user](https://www.zhihu.com/zvideo/1345036055104360448)]
-
-## Papers
-
-- [openwifi: a free and open-source IEEE802.11 SDR implementation on SoC](https://www.orca-project.eu/wp-content/uploads/sites/4/2020/03/openwifi-vtc-antwerp-PID1249076.pdf)
-- [csi murder](https://ans.unibs.it/projects/csi-murder/)
-- [IEEE 802.11 CSI randomization to preserve location privacy: An empirical evaluation in different scenarios](https://www.sciencedirect.com/science/article/abs/pii/S138912862100102X)
-
-Openwifi was born in [ORCA project](https://www.orca-project.eu/) (EU's Horizon2020 programme under agreement number 732174).
-
-## Cite openwifi project
-
-Any use of openwifi project which results in a publication should include a citation via (bibtex example):
-```
-@electronic{openwifigithub,
-            author = {Xianjun, Jiao and Wei, Liu and Michael, Mehari},
-            title = {open-source IEEE802.11/Wi-Fi baseband chip/FPGA design},
-            url = {https://github.com/open-sdr/openwifi},
-            year = {2019},
-}
-```
 
 ## License
 
