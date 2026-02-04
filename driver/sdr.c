@@ -33,6 +33,8 @@
 #include <linux/dma/xilinx_dma.h>
 #include <linux/spi/spi.h>
 #include <net/mac80211.h>
+#include <net/cfg80211.h>
+#include <linux/netlink.h>
 
 #include <linux/clk.h>
 #include <linux/clkdev.h>
@@ -52,20 +54,20 @@
 #include <../../drivers/iio/adc/ad9361_private.h>
 #include <../../drivers/iio/frequency/cf_axi_dds.h>
 
-#include "../user_space/sdrctl_src/nl80211_testmode_def.h"
+#include "nl80211_testmode_def.h"
 #include "hw_def.h"
 #include "sdr.h"
 #include "git_rev.h"
 
 #ifndef RFSoC4x2
-extern int ad9361_do_calib_run(struct ad9361_rf_phy *phy, u32 cal, int arg); 
-extern int cf_axi_dds_datasel(struct cf_axi_dds_state *st, int channel, enum dds_data_select sel);
-extern struct ad9361_rf_phy* ad9361_spi_to_phy(struct spi_device *spi);
-extern int ad9361_tx_mute(struct ad9361_rf_phy *phy, u32 state);
-extern int ad9361_ctrl_outs_setup(struct ad9361_rf_phy *phy, struct ctrl_outs_control *ctrl);
-extern int ad9361_set_tx_atten(struct ad9361_rf_phy *phy, u32 atten_mdb, bool tx1, bool tx2, bool immed);
-extern int ad9361_spi_read(struct spi_device *spi, u32 reg);
-extern int ad9361_get_tx_atten(struct ad9361_rf_phy *phy, u32 tx_num);
+int ad9361_do_calib_run(struct ad9361_rf_phy *phy, u32 cal, int arg){return(0);}; 
+int cf_axi_dds_datasel(struct cf_axi_dds_state *st, int channel, enum dds_data_select sel){return(0);}; 
+struct ad9361_rf_phy* ad9361_spi_to_phy(struct spi_device *spi){return(0);}; 
+int ad9361_tx_mute(struct ad9361_rf_phy *phy, u32 state){return(0);}; 
+int ad9361_ctrl_outs_setup(struct ad9361_rf_phy *phy, struct ctrl_outs_control *ctrl){return(0);}; 
+int ad9361_set_tx_atten(struct ad9361_rf_phy *phy, u32 atten_mdb, bool tx1, bool tx2, bool immed){return(0);}; 
+int ad9361_spi_read(struct spi_device *spi, u32 reg){return(0);}; 
+int ad9361_get_tx_atten(struct ad9361_rf_phy *phy, u32 tx_num){return(0);};
 #else
 int ad9361_do_calib_run(struct ad9361_rf_phy *phy, u32 cal, int arg){return(0);}; 
 int cf_axi_dds_datasel(struct cf_axi_dds_state *st, int channel, enum dds_data_select sel){return(0);}; 
@@ -99,7 +101,6 @@ void openwifi_rf_rx_update_after_tuning(struct openwifi_priv *priv, u32 actual_r
 static void ad9361_rf_set_channel(struct ieee80211_hw *dev, struct ieee80211_conf *conf);
 static void rfsoc_rf_set_channel(struct ieee80211_hw *dev, struct ieee80211_conf *conf);
 
-#include "sdrctl_intf.c"
 #include "sysfs_intf.c"
 
 // bit0: aggregation enable(1)/disable(0); 
@@ -138,7 +139,7 @@ static bool openwifi_is_radio_enabled(struct openwifi_priv *priv)
   return false;
 }
 
-void openwifi_rfkill_init(struct ieee80211_hw *hw)
+static void openwifi_rfkill_init(struct ieee80211_hw *hw)
 {
   struct openwifi_priv *priv = hw->priv;
 
@@ -148,7 +149,7 @@ void openwifi_rfkill_init(struct ieee80211_hw *hw)
   wiphy_rfkill_start_polling(hw->wiphy);
 }
 
-void openwifi_rfkill_poll(struct ieee80211_hw *hw)
+static void openwifi_rfkill_poll(struct ieee80211_hw *hw)
 {
   bool enabled;
   struct openwifi_priv *priv = hw->priv;
@@ -162,7 +163,7 @@ void openwifi_rfkill_poll(struct ieee80211_hw *hw)
   }
 }
 
-void openwifi_rfkill_exit(struct ieee80211_hw *hw)
+static void openwifi_rfkill_exit(struct ieee80211_hw *hw)
 {
   printk("%s openwifi_rfkill_exit\n", sdr_compatible_str);
   wiphy_rfkill_stop_polling(hw->wiphy);
@@ -317,7 +318,7 @@ const struct openwifi_rf_ops rfsoc4x2_rf_ops = {
 //  .calc_rssi  = ad9361_rf_calc_rssi,
 };
 
-u16 reverse16(u16 d) {
+static u16 reverse16(u16 d) {
   union u16_byte2 tmp0, tmp1;
   tmp0.a = d;
   tmp1.c[0] = tmp0.c[1];
@@ -373,7 +374,7 @@ static void openwifi_free_tx_ring(struct openwifi_priv *priv, int ring_idx)
     if (ring->bds[i].skb_linked == 0 && ring->bds[i].dma_mapping_addr == 0)
       continue;
     if (ring->bds[i].dma_mapping_addr != 0)
-      dma_unmap_single(priv->tx_chan->device->dev, ring->bds[i].dma_mapping_addr,ring->bds[i].skb_linked->len, DMA_MEM_TO_DEV);
+      dma_unmap_single(priv->tx_chan->device->dev, ring->bds[i].dma_mapping_addr,ring->bds[i].skb_linked->len, DMA_TO_DEVICE);
 //    if (ring->bds[i].skb_linked!=NULL)
 //      dev_kfree_skb(ring->bds[i].skb_linked); // only use dev_kfree_skb when there is exception
     if ( (ring->bds[i].dma_mapping_addr != 0 && ring->bds[i].skb_linked == 0) ||
@@ -743,7 +744,7 @@ static irqreturn_t openwifi_tx_interrupt(int irq, void *dev_id)
         seq_no = ring->bds[ring->bd_rd_idx].seq_no;
 
         if (seq_no == 0xffff) {// it has been forced cleared by the openwifi_tx (due to out-of-order Tx of different queues to the air?)
-          printk("%s openwifi_tx_interrupt: WARNING wr%d rd%d last_bd_rd_idx%d i%d pkt_cnt%d prio%d fpga q%d hwq len%d bd prio%d len_mpdu%d seq_no%d skb_linked%p dma_mapping_addr%u\n", sdr_compatible_str,
+          printk("%s openwifi_tx_interrupt: WARNING wr%d rd%d last_bd_rd_idx%d i%d pkt_cnt%d prio%d fpga q%d hwq len%d bd prio%d len_mpdu%d seq_no%d skb_linked%p dma_mapping_addr%llu\n", sdr_compatible_str,
           ring->bd_wr_idx, ring->bd_rd_idx, last_bd_rd_idx, i, pkt_cnt, prio, queue_idx, hw_queue_len, ring->bds[ring->bd_rd_idx].prio, ring->bds[ring->bd_rd_idx].len_mpdu, seq_no, ring->bds[ring->bd_rd_idx].skb_linked, (long long int)(ring->bds[ring->bd_rd_idx].dma_mapping_addr));
           continue;
         }
@@ -751,7 +752,7 @@ static irqreturn_t openwifi_tx_interrupt(int irq, void *dev_id)
         skb = ring->bds[ring->bd_rd_idx].skb_linked;
 
         dma_unmap_single(priv->tx_chan->device->dev,ring->bds[ring->bd_rd_idx].dma_mapping_addr,
-            skb->len, DMA_MEM_TO_DEV);
+            skb->len, DMA_TO_DEVICE);
 
         info = IEEE80211_SKB_CB(skb);
         use_ht_aggr = ((info->flags&IEEE80211_TX_CTL_AMPDU)!=0);
@@ -1063,12 +1064,12 @@ static void openwifi_tx(struct ieee80211_hw *dev,
       }
       for (i=0; i<empty_bd_idx; i++) {
         j = ( (ring->bd_wr_idx+i)&(NUM_TX_BD-1) );
-        printk("%s openwifi_tx: WARNING fake stop queue empty_bd_idx%d i%d lnx prio%d map to q%d stop%d hwq len%d wr%d rd%d bd prio%d len_mpdu%d seq_no%d skb_linked%p dma_mapping_addr%u\n", sdr_compatible_str,
+        printk("%s openwifi_tx: WARNING fake stop queue empty_bd_idx%d i%d lnx prio%d map to q%d stop%d hwq len%d wr%d rd%d bd prio%d len_mpdu%d seq_no%d skb_linked%p dma_mapping_addr%llu\n", sdr_compatible_str,
         empty_bd_idx, i, prio, drv_ring_idx, ring->stop_flag, hw_queue_len, ring->bd_wr_idx, ring->bd_rd_idx, ring->bds[j].prio, ring->bds[j].len_mpdu, ring->bds[j].seq_no, ring->bds[j].skb_linked,(long long int)(ring->bds[j].dma_mapping_addr));
         // tell Linux this skb failed
         skb_new = ring->bds[j].skb_linked;
         dma_unmap_single(priv->tx_chan->device->dev,ring->bds[j].dma_mapping_addr,
-              skb_new->len, DMA_MEM_TO_DEV);
+              skb_new->len, DMA_TO_DEVICE);
         info_skipped = IEEE80211_SKB_CB(skb_new);
         ieee80211_tx_info_clear_status(info_skipped);
         info_skipped->status.rates[0].count = 1;
@@ -1089,7 +1090,7 @@ static void openwifi_tx(struct ieee80211_hw *dev,
       }
     } else {
       j = ring->bd_wr_idx;
-      printk("%s openwifi_tx: WARNING real stop queue lnx prio%d map to q%d stop%d hwq len%d wr%d rd%d bd prio%d len_mpdu%d seq_no%d skb_linked%p dma_mapping_addr%u\n", sdr_compatible_str,
+      printk("%s openwifi_tx: WARNING real stop queue lnx prio%d map to q%d stop%d hwq len%d wr%d rd%d bd prio%d len_mpdu%d seq_no%d skb_linked%p dma_mapping_addr%llu\n", sdr_compatible_str,
       prio, drv_ring_idx, ring->stop_flag, hw_queue_len, ring->bd_wr_idx, ring->bd_rd_idx, ring->bds[j].prio, ring->bds[j].len_mpdu, ring->bds[j].seq_no, ring->bds[j].skb_linked, (long long int)(ring->bds[j].dma_mapping_addr));
 
       ieee80211_stop_queue(dev, prio); // here we should stop those prio related to the queue idx flag set in TX_INTF_REG_S_AXIS_FIFO_NO_ROOM_read
@@ -1295,8 +1296,6 @@ static void openwifi_tx(struct ieee80211_hw *dev,
         printk("%s openwifi_tx: WARNING sn %d skb_realloc_headroom failed!\n", sdr_compatible_str, ring->bd_wr_idx);
         goto openwifi_tx_early_out;
       }
-      if (skb->sk != NULL)
-        skb_set_owner_w(skb_new, skb->sk);
       dev_kfree_skb(skb);
       skb = skb_new;
     }
@@ -1316,8 +1315,6 @@ static void openwifi_tx(struct ieee80211_hw *dev,
         printk("%s openwifi_tx: WARNING(AGGR) sn %d skb_copy_expand failed!\n", sdr_compatible_str, ring->bd_wr_idx);
         goto openwifi_tx_early_out;
       }
-      if (skb->sk != NULL)
-        skb_set_owner_w(skb_new, skb->sk);
       dev_kfree_skb(skb);
       skb = skb_new;
     }
@@ -1347,8 +1344,6 @@ static void openwifi_tx(struct ieee80211_hw *dev,
         printk("%s openwifi_tx: WARNING sn %d skb_copy_expand failed!\n", sdr_compatible_str, ring->bd_wr_idx);
         goto openwifi_tx_early_out;
       }
-      if (skb->sk != NULL)
-        skb_set_owner_w(skb_new, skb->sk);
       dev_kfree_skb(skb);
       skb = skb_new;
     }
@@ -1416,7 +1411,7 @@ static void openwifi_tx(struct ieee80211_hw *dev,
 
 //-------------------------fire skb DMA to hardware----------------------------------
   dma_mapping_addr = dma_map_single(priv->tx_chan->device->dev, dma_buf,
-         num_dma_byte, DMA_MEM_TO_DEV);
+         num_dma_byte, DMA_TO_DEVICE);
 
   if (dma_mapping_error(priv->tx_chan->device->dev,dma_mapping_addr)) {
     // dev_err(priv->tx_chan->device->dev, "sdr,sdr openwifi_tx: WARNING TX DMA mapping error\n");
@@ -1465,7 +1460,7 @@ static void openwifi_tx(struct ieee80211_hw *dev,
   return;
 
 openwifi_tx_after_dma_mapping:
-  dma_unmap_single(priv->tx_chan->device->dev, dma_mapping_addr, num_dma_byte, DMA_MEM_TO_DEV);
+  dma_unmap_single(priv->tx_chan->device->dev, dma_mapping_addr, num_dma_byte, DMA_TO_DEVICE);
 
 openwifi_tx_early_out_after_lock:
   spin_unlock_irqrestore(&priv->lock, flags);
@@ -1716,7 +1711,7 @@ err_dma:
   return ret;
 }
 
-static void openwifi_stop(struct ieee80211_hw *dev)
+static void openwifi_stop(struct ieee80211_hw *dev, bool flush)
 {
   struct openwifi_priv *priv = dev->priv;
   u32 reg, reg1;
@@ -1815,7 +1810,7 @@ static void openwifi_beacon_work(struct work_struct *work)
     goto resched;
 
   /* grab a fresh beacon */
-  skb = ieee80211_beacon_get(dev, vif);
+  skb = ieee80211_beacon_get(dev, vif, 0);
   if (!skb)
     goto resched;
 
@@ -1930,7 +1925,7 @@ static int openwifi_config(struct ieee80211_hw *dev, u32 changed)
 static void openwifi_bss_info_changed(struct ieee80211_hw *dev,
              struct ieee80211_vif *vif,
              struct ieee80211_bss_conf *info,
-             u32 changed)
+             u64 changed)
 {
   struct openwifi_priv *priv = dev->priv;
   struct openwifi_vif *vif_priv;
@@ -1967,7 +1962,7 @@ static void openwifi_bss_info_changed(struct ieee80211_hw *dev,
     printk("%s openwifi_bss_info_changed WARNING BSS_CHANGED_BASIC_RATES %x\n",sdr_compatible_str,info->basic_rates);
 
   if (changed & (BSS_CHANGED_ERP_SLOT | BSS_CHANGED_ERP_PREAMBLE)) {
-    printk("%s openwifi_bss_info_changed WARNING BSS_CHANGED_ERP_SLOT %d BSS_CHANGED_ERP_PREAMBLE %d short slot %d\n",sdr_compatible_str,
+    printk("%s openwifi_bss_info_changed WARNING BSS_CHANGED_ERP_SLOT %llu BSS_CHANGED_ERP_PREAMBLE %llu short slot %d\n",sdr_compatible_str,
     changed&BSS_CHANGED_ERP_SLOT,changed&BSS_CHANGED_ERP_PREAMBLE,info->use_short_slot);
     if (info->use_short_slot && priv->use_short_slot==false) {
       priv->use_short_slot=true;
@@ -1989,12 +1984,12 @@ static void openwifi_bss_info_changed(struct ieee80211_hw *dev,
       schedule_work(&vif_priv->beacon_work.work);
       printk("%s openwifi_bss_info_changed WARNING enable_beacon\n",sdr_compatible_str);
     }
-    printk("%s openwifi_bss_info_changed WARNING BSS_CHANGED_BEACON_ENABLED %d BSS_CHANGED_BEACON %d\n",sdr_compatible_str,
+    printk("%s openwifi_bss_info_changed WARNING BSS_CHANGED_BEACON_ENABLED %llu BSS_CHANGED_BEACON %llu\n",sdr_compatible_str,
     changed&BSS_CHANGED_BEACON_ENABLED,changed&BSS_CHANGED_BEACON);
   }
 }
 // helper function
-u32 log2val(u32 val){
+static u32 log2val(u32 val){
   u32 ret_val = 0 ;
   while(val>1){
     val = val >> 1 ;
@@ -2003,7 +1998,7 @@ u32 log2val(u32 val){
   return ret_val ;
 }
 
-static int openwifi_conf_tx(struct ieee80211_hw *dev, struct ieee80211_vif *vif, u16 queue,
+static int openwifi_conf_tx(struct ieee80211_hw *dev, struct ieee80211_vif *vif, unsigned int queue, u16 ac,
         const struct ieee80211_tx_queue_params *params)
 {
   struct openwifi_priv *priv = dev->priv;
@@ -2111,11 +2106,11 @@ static int openwifi_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *
     case IEEE80211_AMPDU_TX_OPERATIONAL:
       buf_size = 4;
 //      buf_size = (params->buf_size) - 1;
-      max_tx_bytes = (1 << (IEEE80211_HT_MAX_AMPDU_FACTOR + sta->ht_cap.ampdu_factor)) - 1;
-      ampdu_action_config = ( sta->ht_cap.ampdu_density<<24 | buf_size<<16 | max_tx_bytes );
+      max_tx_bytes = (1 << (IEEE80211_HT_MAX_AMPDU_FACTOR + sta->deflink.ht_cap.ampdu_factor)) - 1;
+      ampdu_action_config = ( sta->deflink.ht_cap.ampdu_density<<24 | buf_size<<16 | max_tx_bytes );
       tx_intf_api->TX_INTF_REG_AMPDU_ACTION_CONFIG_write(ampdu_action_config);
       printk("%s openwifi_ampdu_action: TX operational. tid %d max_tx_bytes %d ampdu_density %d buf_size %d\n", 
-      sdr_compatible_str, params->tid, max_tx_bytes, sta->ht_cap.ampdu_density, buf_size);
+      sdr_compatible_str, params->tid, max_tx_bytes, sta->deflink.ht_cap.ampdu_density, buf_size);
       break;
     case IEEE80211_AMPDU_RX_START:
       printk("%s openwifi_ampdu_action: start RX aggregation. tid %d\n", sdr_compatible_str, params->tid);
@@ -2149,7 +2144,6 @@ static const struct ieee80211_ops openwifi_ops = {
   .reset_tsf       = openwifi_reset_tsf,
   .set_rts_threshold = openwifi_set_rts_threshold,
   .ampdu_action      = openwifi_ampdu_action,
-  .testmode_cmd     = openwifi_testmode_cmd,
 };
 
 static const struct of_device_id openwifi_dev_of_ids[] = {
@@ -2727,14 +2721,13 @@ static int openwifi_dev_probe(struct platform_device *pdev)
   return err;
 }
 
-static int openwifi_dev_remove(struct platform_device *pdev)
+static void openwifi_dev_remove(struct platform_device *pdev)
 {
   struct ieee80211_hw *dev = platform_get_drvdata(pdev);
   struct openwifi_priv *priv = dev->priv;
 
   if (!dev) {
     pr_info("%s openwifi_dev_remove: dev %p\n", sdr_compatible_str, (void*)dev);
-    return(-1);
   }
 
   sysfs_remove_bin_file(&pdev->dev.kobj, &priv->bin_iq);
@@ -2744,7 +2737,6 @@ static int openwifi_dev_remove(struct platform_device *pdev)
   openwifi_rfkill_exit(dev);
   ieee80211_unregister_hw(dev);
   ieee80211_free_hw(dev);
-  return(0);
 }
 
 static struct platform_driver openwifi_dev_driver = {

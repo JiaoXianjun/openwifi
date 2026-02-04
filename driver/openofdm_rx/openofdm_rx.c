@@ -15,6 +15,7 @@
 #include <linux/of_address.h>
 #include <linux/of_dma.h>
 #include <linux/of_platform.h>
+#include <linux/platform_device.h>
 #include <linux/of_irq.h>
 #include <linux/slab.h>
 #include <linux/clk.h>
@@ -160,7 +161,7 @@ static int dev_probe(struct platform_device *pdev)
 	if (IS_ERR(base_addr))
 		return PTR_ERR(base_addr);
 
-	printk("%s dev_probe io start 0x%08x end 0x%08x name %s flags 0x%08x desc 0x%08x\n", openofdm_rx_compatible_str,io->start,io->end,io->name,(u32)io->flags,(u32)io->desc);
+	printk("%s dev_probe io start 0x%08llx end 0x%08llx name %s flags 0x%08x desc 0x%08x\n", openofdm_rx_compatible_str,(u64)io->start,(u64)io->end,io->name,(u32)io->flags,(u32)io->desc);
 	printk("%s dev_probe base_addr 0x%08x\n", openofdm_rx_compatible_str,(u32)base_addr);
 	printk("%s dev_probe openofdm_rx_driver_api_inst 0x%08x\n", openofdm_rx_compatible_str, (u32)&openofdm_rx_driver_api_inst);
 	printk("%s dev_probe             openofdm_rx_api 0x%08x\n", openofdm_rx_compatible_str, (u32)openofdm_rx_api);
@@ -172,7 +173,7 @@ static int dev_probe(struct platform_device *pdev)
 	return err;
 }
 
-static int dev_remove(struct platform_device *pdev)
+static void dev_remove(struct platform_device *pdev)
 {
 	printk("\n");
 
@@ -181,7 +182,6 @@ static int dev_remove(struct platform_device *pdev)
 	printk("%s dev_remove             openofdm_rx_api 0x%08x\n", openofdm_rx_compatible_str, (u32)openofdm_rx_api);
 
 	printk("%s dev_remove succeed!\n", openofdm_rx_compatible_str);
-	return 0;
 }
 
 static struct platform_driver dev_driver = {

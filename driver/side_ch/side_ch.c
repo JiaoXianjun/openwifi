@@ -16,6 +16,7 @@
 #include <linux/of_address.h>
 #include <linux/of_dma.h>
 #include <linux/of_platform.h>
+#include <linux/platform_device.h>
 #include <linux/of_irq.h>
 #include <linux/slab.h>
 #include <linux/clk.h>
@@ -382,7 +383,7 @@ static int get_side_info(int num_eq, int iq_len) {
 		return(-2);
 
 	side_info_buf_size = num_dma_symbol*8;
-	side_info_buf_dma = dma_map_single(chan_to_ps_dev->dev, side_info_buf, side_info_buf_size, DMA_DEV_TO_MEM);
+	side_info_buf_dma = dma_map_single(chan_to_ps_dev->dev, side_info_buf, side_info_buf_size, DMA_FROM_DEVICE);
 	if (dma_mapping_error(chan_to_ps_dev->dev, side_info_buf_dma)) {
 		printk("%s get_side_info WARNING chan_to_ps_dev DMA mapping error\n", side_ch_compatible_str);
 		return(-3);
@@ -422,11 +423,11 @@ static int get_side_info(int num_eq, int iq_len) {
 		goto err_dst_buf_with_unmap;
 	}
 
-	dma_unmap_single(chan_to_ps_dev->dev, side_info_buf_dma, side_info_buf_size, DMA_DEV_TO_MEM);
+	dma_unmap_single(chan_to_ps_dev->dev, side_info_buf_dma, side_info_buf_size, DMA_FROM_DEVICE);
 	return(side_info_buf_size);
 
 err_dst_buf_with_unmap:
-	dma_unmap_single(chan_to_ps_dev->dev, side_info_buf_dma, side_info_buf_size, DMA_DEV_TO_MEM);
+	dma_unmap_single(chan_to_ps_dev->dev, side_info_buf_dma, side_info_buf_size, DMA_FROM_DEVICE);
 	return(-100);
 }
 
@@ -548,7 +549,7 @@ static int dev_probe(struct platform_device *pdev) {
 	if (IS_ERR(base_addr))
 		return PTR_ERR(base_addr);
 
-	printk("%s dev_probe: io start 0x%p end 0x%p name %s flags 0x%08x desc %s\n", side_ch_compatible_str, (void*)io->start, (void*)io->end, io->name, (u32)io->flags, (char*)io->desc);
+	printk("%s dev_probe: io start 0x%08llx end 0x%08llx name %s flags 0x%08x desc %s\n", side_ch_compatible_str, (u64)io->start, (u64)io->end, io->name, (u32)io->flags, (char*)io->desc);
 	printk("%s dev_probe: base_addr 0x%p\n", side_ch_compatible_str, base_addr);
 
 	printk("%s dev_probe: succeed!\n", side_ch_compatible_str);
@@ -635,7 +636,7 @@ free_chan_to_ps:
 // 	return err;
 }
 
-static int dev_remove(struct platform_device *pdev)
+static void dev_remove(struct platform_device *pdev)
 {
 	printk("\n");
 
@@ -661,7 +662,6 @@ static int dev_remove(struct platform_device *pdev)
 	
 	printk("%s dev_remove: base_addr 0x%p\n", side_ch_compatible_str, base_addr);
 	printk("%s dev_remove: succeed!\n", side_ch_compatible_str);
-	return 0;
 }
 
 static struct platform_driver dev_driver = {
